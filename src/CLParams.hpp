@@ -2,8 +2,14 @@
 
 #include <string>
 
-class CLParams {    
+#define KByte 1024
+#define MByte 1024*1024
+
+namespace file_hash {
+class CLParams {   
 public:
+    static constexpr int DEFAULT_BLOCK_SIZE = 1 * MByte;
+
     static void showUsage(char *name);
 
     bool isValid() const;
@@ -15,12 +21,14 @@ public:
 
     const std::string &getSourceFile() const;
     const std::string &getOutputFile() const;
-    uint getBlockSize() const;
-    uint getThreadCount() const;
+    int getBlockSize() const;
+    int getThreadCount() const;
 
 private:
     std::string m_sourceFile;
     std::string m_outputFile;
-    uint m_blockSize = 512;
-    uint m_threadCount = 1;
+    int m_blockSize = DEFAULT_BLOCK_SIZE;
+    int m_threadCount = 0;
 };
+
+}

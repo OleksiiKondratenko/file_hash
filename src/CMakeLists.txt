@@ -3,23 +3,51 @@ find_package(Boost 1.53 REQUIRED
         thread
 )
 
+find_package(OpenSSL REQUIRED
+    COMPONENTS
+        Crypto
+)
+
 add_library(fileHashLib
+    # utils
+    utils/DebugMacros.hpp
+    utils/ExecutionStats.hpp
+
     # Abstractions
-    ReaderAbstract.hpp
-    BuilderAbstract.hpp
-    ReaderBuilderAbstract.hpp
+    abstract/QueueAbstract.hpp
+    abstract/BlockReaderAbstract.hpp
+    abstract/ReaderBuilderAbstract.hpp
+    abstract/BlockProcessorAbstract.hpp
+    abstract/ProcessorBuilderAbstract.hpp
+    abstract/ResultWriterAbstract.hpp
+    abstract/ResultWriterBuilderAbstract.hpp
 
     # Implementations
-    FileReaderBuilder.hpp
-    FileReader.hpp FileReader.cpp
+    fileReader/FileReaderBuilder.hpp fileReader/FileReaderBuilder.cpp
+    fileReader/FileReader.hpp fileReader/FileReader.cpp
+    
+    hashProcessor/HashProcessor.hpp hashProcessor/HashProcessor.cpp
+    hashProcessor/HashProcessorBuilder.hpp hashProcessor/HashProcessorBuilder.cpp
+    
+    fileWriter/FileWriterBuilder.hpp fileWriter/FileWriterBuilder.cpp
+    fileWriter/FileWriter.hpp fileWriter/FileWriter.cpp
+
+    lockFree/LockFreeQueue.hpp lockFree/LockFreeQueue.cpp
 
     # Application
-    FileHashSuperwiser.hpp FileHashSuperwiser.cpp
+    blocks/Block.hpp blocks/Block.cpp
+    blocks/BlockCache.hpp blocks/BlockCache.cpp
+
+    taskRunner/TaskRunner.hpp taskRunner/TaskRunner.cpp
 )
 
 target_include_directories(fileHashLib PUBLIC ${CMAKE_CURRENT_LIST_DIR})
 
-target_link_libraries(fileHashLib PRIVATE Boost::headers)
+target_link_libraries(fileHashLib PRIVATE
+    Boost::headers
+    Boost::thread
+    OpenSSL::Crypto
+)
 
 add_executable(fileHash
     CLParams.hpp CLParams.cpp

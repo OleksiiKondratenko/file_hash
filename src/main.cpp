@@ -1,9 +1,13 @@
 #include <iostream>
 
 #include "CLParams.hpp"
-#include "FileHashSuperwiser.hpp"
+#include "taskRunner/TaskRunner.hpp"
 
-#include "FileReaderBuilder.hpp"
+#include "fileReader/FileReaderBuilder.hpp"
+#include "hashProcessor/HashProcessorBuilder.hpp"
+#include "fileWriter/FileWriterBuilder.hpp"
+
+using namespace file_hash;
 
 int main(int argc, char **argv)
 {
@@ -38,7 +42,34 @@ int main(int argc, char **argv)
         std::cerr << "Params are not valid!" << std::endl;
         CLParams::showUsage(argv[0]);
     } else {
-        FileHashSuperwiser sp{FileReaderBuilder{}};
+        auto readerBuilder = fileReader::FileReaderBuilder{params.getSourceFile(), params.getBlockSize()};
+        auto processorBuilder = hashProcessor::HashProcessorBuilder{};
+        auto writerBuilder = fileWriter::FileWriterBuilder{params.getOutputFile(), processorBuilder.sizeOfResult(), readerBuilder.totalNumberOfBlocks()};
+
+        std::cout << "Start processing: " << std::endl << std::endl;
+        std::cout << "Input File: " << readerBuilder.fileName() << ", total blocks: " << readerBuilder.totalNumberOfBlocks() << std::endl << std::endl;
+        std::cout << "Output File: " << readerBuilder.fileName() << std::endl << std::endl;
+
+        taskRunner::TaskRunner runner{readerBuilder, processorBuilder, writerBuilder, params.getThreadCount()};
+        auto stats = runner.run();
+
+        std::cout << std::endl << "Processing finished: " << std::endl << std::endl;
+        if (stats) {
+            std::cout << "Duration: " << duration<double, std::milli>(stats->endTime - stats->startTime).count() << " msec." << std::endl << std::endl;
+            std::cout << "Blocks: " << std::endl
+                << "Total blocks: " << stats->totalBlocks << std::endl
+                << "Blocks read: " << stats->blocksRead << std::endl
+                << "Blocks written: " << stats->blocksWritten << std::endl << std::endl;
+            std::cout << "Empty spins contention: " << std::endl
+                << " waits for reading: " << stats->waitsForReading << std::endl
+                << " waits for processing: " << stats->waitsForProcessing << std::endl
+                << " waits for writing: " << stats->waitsForWriting << std::endl
+            ;
+        } else {
+            std::cout << "Execution failed!";
+        }
+
+        delete stats;
     }
 
     return 0;

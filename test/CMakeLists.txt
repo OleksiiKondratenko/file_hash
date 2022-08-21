@@ -1,6 +1,11 @@
-add_executable(testRunner
-    main.cpp
-    FileHashSuperwiserTest.hpp FileHashSuperwiserTest.cpp
-)
+find_package(GTest QUIET)
 
-target_link_libraries(testRunner fileHashLib)
+if(GTest_FOUND)
+    enable_testing()
+
+    include_directories(${GTEST_INCLUDE_DIRS})
+    add_subdirectory(blocks)
+    add_subdirectory(taskRunner)
+else()
+    message(STATUS "GTest not found, tests will not be included.")
+endif()
